@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Tclock</string>
+    <string name="time">00:00:00</string>
+    <string name="font">time font</string>
+	<string name="color">time color</string>
+	<string name="date_color">date color</string>
+	<string name="color_picker">color select</string>
+    <string name="full_screen">full screen</string>
+    <string name="normal_screen">status bar</string>
+    <string name="date_sample">9102–40–81 Wednesday</string>
+    <string name="date_formate">yyyy–M–d EEEE</string>
+    <string name="ok">OK</string>
+    <string name="orientation">orientation</string>
+    <string name="auto">auto</string>
+    <string name="landscape">landscape</string>
+    <string name="portrait">portrait</string>
+</resources>
