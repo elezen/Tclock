@@ -14,12 +14,14 @@ import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.AbsoluteSizeSpan;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,19 +32,20 @@ import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-public class MainActivity extends Activity {
+public class TinyClock extends Activity {
     Handler handler=new Handler();  	
-	public TextView tv=null;
+	private TextView tv=null;
 	private long timeZoneOffset;
 	private String[] fonts;
 	private final int ORIID=-1000,SETCOLOR=-2,SET_FULL_SCREEN=-3,SUBMENU=-4,SETDATECOLOR=-5,
-			ORIMENU=-6;
-	private boolean fullScreen=false;
+			ORIMENU=-100,SET_H24=-7;
+	private boolean fullScreen=false,h24=false;
 	private Typeface fontFace=null;
-	private MenuItem mMenufullScreen=null;
+	private MenuItem mMenufullScreen=null,mMenu24;
 	private float mY=0;
 	private TextView mDateView;
 	private SimpleDateFormat mSimpleDF;
+	private long oldD=0;
 	SpannableStringBuilder ssb=new SpannableStringBuilder("00:00:00");
 	AbsoluteSizeSpan has=new AbsoluteSizeSpan(64,true),
 			mas=new AbsoluteSizeSpan(32,true);
@@ -84,7 +87,7 @@ public class MainActivity extends Activity {
         }
         fullScreen=sp.getBoolean("FULLSCREEN", false);
         if(fullScreen)setFullScreen(fullScreen);
-
+        h24=sp.getBoolean("H24", false);
         autoFit();
 
 	}
@@ -135,6 +138,9 @@ public class MainActivity extends Activity {
 		subMenu.add(1,ORIID-2,2,res.getString(R.string.portrait));
 		mMenufullScreen=menu.add(1,SET_FULL_SCREEN,4,
 				getResources().getString(fullScreen?R.string.normal_screen:R.string.full_screen));
+		mMenu24=menu.add(1,SET_H24,4,
+				getResources().getString(h24?R.string.h24:R.string.h12));
+		
         return true;  
     }  
 	private int setOrientation(int i){
@@ -194,6 +200,11 @@ public class MainActivity extends Activity {
                 	mMenufullScreen.setTitle(fullScreen?R.string.normal_screen:R.string.full_screen);
                 	saveSetings("FULLSCREEN",fullScreen);
         			break;
+        		case SET_H24:
+        			h24=!h24;
+                	mMenu24.setTitle(h24?R.string.h24:R.string.h12);
+                	saveSetings("H24",h24);
+        			break;
         		case SETDATECOLOR:
                 	dialog = new ColorPickerDialog(this, mDateView.getTextColors().getDefaultColor(), 
             				getResources().getString(R.string.color_picker), 
@@ -221,44 +232,78 @@ public class MainActivity extends Activity {
 	Runnable runnable=new Runnable() {  
         @Override  
         public void run() {  
-        	long tm,h,m,s,t=System.currentTimeMillis();
-        	tm=t+timeZoneOffset;
-            h=tm/(60*60*1000) % 12;
-            if(h==0){
-            	h=12;
-            	updateDate(tm);
-            }
-            m=tm/(60*1000)%60;
-            s=tm/1000%60;
-            ssb.replace(0, 5, String.format(Locale.US, "%2d:%02d", h,m));
-            ssb.replace(5, 8, String.format(Locale.US, ":%02d", s));
-        	tv.setText(ssb);
-            handler.postDelayed(this, 1000-t%1000);  
+        	update();
         }  
     };  
-
+    void update(){
+    	long tm,h,m,s,d,t=System.currentTimeMillis();
+    	tm=t+timeZoneOffset;
+    	d=tm/(24*60*60*1000);
+    	if(d != oldD){
+    		oldD=d;
+    		updateDate(tm);
+    	}
+    	if(h24){
+    		h=tm/(60*60*1000) % 24;
+    	}else{
+            h=tm/(60*60*1000) % 12;
+            if(h==0)h=12;
+    	}
+        m=tm/(60*1000)%60;
+        s=tm/1000%60;
+        ssb.replace(0, 5, String.format(Locale.ENGLISH, "%2d:%02d", h,m));
+        ssb.replace(5, 8, String.format(Locale.ENGLISH, ":%02d", s));
+    	tv.setText(ssb);
+        handler.postDelayed(runnable, 1000-t%1000);      	
+    }
     private final void calTextSize(){
     	Paint p=tv.getPaint();
     	float tw,textSize,f;
     	handler.removeCallbacks(runnable);
         float w = tv.getWidth()-tv.getPaddingLeft()-tv.getPaddingRight();
-
+        float h = mDateView.getHeight()+tv.getHeight();
+        Rect rect = new Rect();
 		p.setTextSize(240F);
-		tw=p.measureText("00:00");
+		p.getTextBounds("88:88", 0, 5, rect);
+		float h1=rect.height();
+		tw=rect.width();
 		p.setTextSize(120F);
-		tw+=p.measureText(":00");
-		textSize=240F*w/tw-8F;
-		p.setTextSize(240F);
-		tw=p.measureText(getResources().getString(R.string.date_sample));
-		f=240F*w/tw-8F;
-		if(f>textSize/5F)f=textSize/5F;
-		mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX, f);
-		updateDate(System.currentTimeMillis());
+		p.getTextBounds(":88", 0, 3, rect);
+		tw+=rect.width();
+		textSize=240F*w/tw*0.9F;
+		h1=h1*w/tw;
+		float hh=h*0.8F;
+		if(h1>hh)textSize=textSize*hh/h1;
+		Log.e("***Height1",String.valueOf(h1));
+		p.setTextSize(textSize);
+		Log.e("***size",String.valueOf(textSize));
+
 		has=new AbsoluteSizeSpan((int) textSize,false);
 		mas=new AbsoluteSizeSpan((int) textSize/2,false);
 		ssb.clearSpans();
 		ssb.setSpan(has, 0, 5, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
 		ssb.setSpan(mas, 5, 8, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+
+		// date size
+		p=mDateView.getPaint();
+		p.setTextSize(240F);
+
+		String s=getResources().getString(R.string.date_sample);
+		p.getTextBounds(s, 0, s.length(), rect);
+		tw=rect.width();
+		f=240F*w/tw*0.9F;
+		h1=rect.height()*w/tw;
+		hh=h*0.2F;
+		if(h1>hh)f=f*hh/h1;
+		p.setTextSize(f);
+//		fm = p.getFontMetrics();  
+//		h1 = (float)Math.ceil(fm.descent - fm.ascent);
+	
+		Log.e("***Height2",String.valueOf(h1));
+		Log.e("***size2",String.valueOf(f));
+		
+		mDateView.setTextSize(TypedValue.COMPLEX_UNIT_PX, f);
+		updateDate(System.currentTimeMillis());		
     	handler.post(runnable);
     }
 
@@ -274,6 +319,8 @@ public class MainActivity extends Activity {
                 return true;
             }
         }); 
+
+        
 
     }
     

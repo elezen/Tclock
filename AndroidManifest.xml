@@ -15,7 +15,7 @@
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Black.NoTitleBar">
         <activity
-            android:name=".MainActivity"
+            android:name=".TinyClock"
             android:label="@string/app_name" 
             android:screenOrientation="sensor">
             <intent-filter>

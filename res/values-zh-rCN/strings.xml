@@ -16,4 +16,6 @@
     <string name="auto">自动</string>
     <string name="landscape">横向</string>
     <string name="portrait">纵向</string>
+    <string name="h24">24小时制</string>
+    <string name="h12">12小时制</string>    
 </resources>

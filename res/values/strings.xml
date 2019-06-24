@@ -16,4 +16,6 @@
     <string name="auto">auto</string>
     <string name="landscape">landscape</string>
     <string name="portrait">portrait</string>
+    <string name="h24">24-hour</string>
+    <string name="h12">12-hour</string>
 </resources>

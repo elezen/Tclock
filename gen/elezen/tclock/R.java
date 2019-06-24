@@ -36,6 +36,8 @@ public final class R {
         public static final int date_sample=0x7f050008;
         public static final int font=0x7f050002;
         public static final int full_screen=0x7f050006;
+        public static final int h12=0x7f050010;
+        public static final int h24=0x7f05000f;
         public static final int landscape=0x7f05000d;
         public static final int normal_screen=0x7f050007;
         public static final int ok=0x7f05000a;
