@@ -9,8 +9,8 @@
 	<string name="color_picker">color select</string>
     <string name="full_screen">full screen</string>
     <string name="normal_screen">status bar</string>
-    <string name="date_sample">9102–40–81 Wednesday</string>
-    <string name="date_formate">yyyy–M–d EEEE</string>
+    <string name="date_sample">9102–40–81 Wed</string>
+    <string name="date_formate">yyyy–M–d E</string>
     <string name="ok">OK</string>
     <string name="orientation">orientation</string>
     <string name="auto">auto</string>

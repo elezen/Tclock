@@ -46,6 +46,9 @@ public class TinyClock extends Activity {
 	private TextView mDateView;
 	private SimpleDateFormat mSimpleDF;
 	private long oldD=0;
+	private boolean dayPatch=false;
+	private String[] dayNames=null;
+//	private int test=3;
 	SpannableStringBuilder ssb=new SpannableStringBuilder("00:00:00");
 	AbsoluteSizeSpan has=new AbsoluteSizeSpan(64,true),
 			mas=new AbsoluteSizeSpan(32,true);
@@ -54,14 +57,17 @@ public class TinyClock extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		Resources rs=getResources();
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		tv=(TextView)findViewById(R.id.t1);
 		mDateView=(TextView)findViewById(R.id.t2);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 	    timeZoneOffset=TimeZone.getDefault().getRawOffset();
-	    mSimpleDF= new SimpleDateFormat(getResources().getString(R.string.date_formate),Locale.getDefault());
-//	    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); 
+	    mSimpleDF= new SimpleDateFormat(rs.getString(R.string.date_formate),Locale.getDefault());
+	    dayPatch=rs.getBoolean(R.bool.date_patch);
+	    dayNames=rs.getStringArray(R.array.dayNames);
+	    //	    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); 
 	    
 	    AssetManager assets=getAssets();
 		try {
@@ -225,8 +231,20 @@ public class TinyClock extends Activity {
         return true;  
     }  
 	
+	@SuppressWarnings("deprecation")
 	private void updateDate(long t){
-		mDateView.setText(mSimpleDF.format(new Date(t)));
+		String s;
+		Date d=new Date(t);
+		s=mSimpleDF.format(d);
+		if(dayPatch){
+			s=s+dayNames[d.getDay()];
+		}
+
+		mDateView.setText(s);
+		
+//		else 
+//			mDateView.setText(getResources().getString(R.string.date_sample));
+		
 	}
 	
 	Runnable runnable=new Runnable() {  
@@ -251,6 +269,10 @@ public class TinyClock extends Activity {
     	}
         m=tm/(60*1000)%60;
         s=tm/1000%60;
+//        if(test>0){
+ //       	h=28;m=88;s=88;oldD=0;
+//        	test--;
+//        }
         ssb.replace(0, 5, String.format(Locale.ENGLISH, "%2d:%02d", h,m));
         ssb.replace(5, 8, String.format(Locale.ENGLISH, ":%02d", s));
     	tv.setText(ssb);

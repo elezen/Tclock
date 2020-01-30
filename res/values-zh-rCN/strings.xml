@@ -10,7 +10,7 @@
     <string name="full_screen">全屏显示</string>
     <string name="normal_screen">取消全屏</string>
     <string name="date_sample">9102年40月81日 星期日</string>
-    <string name="date_formate">yyyy年M月d日 EEEE</string>
+    <string name="date_formate">yyyy年M月d日&#160;</string>
     <string name="ok">确定</string>
     <string name="orientation">显示方向</string>
     <string name="auto">自动</string>

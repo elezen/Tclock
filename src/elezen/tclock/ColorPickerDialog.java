@@ -60,10 +60,9 @@ public class ColorPickerDialog extends Dialog {
     	requestWindowFeature(Window.FEATURE_NO_TITLE);
         DisplayMetrics dm = new DisplayMetrics();
         getWindow().getWindowManager().getDefaultDisplay().getMetrics(dm);
-        if(dm.heightPixels>dm.widthPixels){
-        	width=dm.widthPixels*3/4;height=width*4/3;
-        }else{
-        	height=dm.heightPixels;
+        width=dm.widthPixels*3/4;height=width*4/3;
+        if(height>dm.heightPixels*3/4){
+        	height=dm.heightPixels*3/4;
         	width=height*3/4;	
         }
         
@@ -101,13 +100,15 @@ public class ColorPickerDialog extends Dialog {
     	private String mOk;
     	private float textPoX,textPoY;
     	
+    	private float unit;
+    	
 		public ColorPickerView(Context context, int height, int width) {
 			super(context);
-			this.mHeight = height - 36;
+			this.mHeight = height;
 			this.mWidth = width;
-			setMinimumHeight(height - 36);
+			setMinimumHeight(mHeight);
 			setMinimumWidth(width);
-			
+			unit=width/3f;
 			//渐变色环参数
 	    	mCircleColors = new int[] {0xFFFF0000, 0xFFFF00FF, 0xFF0000FF, 
 	    			0xFF00FFFF, 0xFF00FF00,0xFFFFFF00, 0xFFFF0000};
@@ -115,15 +116,15 @@ public class ColorPickerDialog extends Dialog {
             mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             mPaint.setShader(s);
             mPaint.setStyle(Paint.Style.STROKE);
-            mPaint.setStrokeWidth(50);
-            r = width / 2 * 0.7f - mPaint.getStrokeWidth() * 0.5f;
+            mPaint.setStrokeWidth(0.5f*unit);
+            r = (1.25f-0.3f)*unit;
             
 
             //中心圆参数
             mCenterPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             mCenterPaint.setColor(mInitialColor);
-            mCenterPaint.setStrokeWidth(5);
-            centerRadius = (r - mPaint.getStrokeWidth() / 2 ) * 0.7f;
+            mCenterPaint.setStrokeWidth(1f);
+            centerRadius = 0.6f*unit;
             
             mTextPaint=new Paint(Paint.ANTI_ALIAS_FLAG);
             mOk=getResources().getString(R.string.ok);
@@ -133,24 +134,23 @@ public class ColorPickerDialog extends Dialog {
             //边框参数
             mLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             mLinePaint.setColor(Color.parseColor("#72A1D1"));
-            mLinePaint.setStrokeWidth(4);
+            mLinePaint.setStrokeWidth(1f);
             
             //黑白渐变参数
             mRectColors = new int[]{0xFF000000, mCenterPaint.getColor(), 0xFFFFFFFF};
             mRectPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            mRectPaint.setStrokeWidth(5);
-            rectLeft = -r - mPaint.getStrokeWidth() * 0.5f;
-            rectTop = r + mPaint.getStrokeWidth() * 0.5f + 
-            		mLinePaint.getStrokeMiter() * 0.5f + 15;
-            rectRight = r + mPaint.getStrokeWidth() * 0.5f;
-            rectBottom = rectTop + 50;
+            mRectPaint.setStrokeWidth(1f);
+            rectLeft = -1.25f*unit;
+            rectTop = 1.4f*unit;
+            rectRight = 1.25f*unit;
+            rectBottom = rectTop + 0.75f*unit;
 		}
 
 		@SuppressLint("DrawAllocation")
 		@Override
 		protected void onDraw(Canvas canvas) {
 			//移动中心
-            canvas.translate(mWidth / 2, mHeight / 2 - 50);
+            canvas.translate(1.5f*unit,1.5f*unit);
             //画中心圆
             canvas.drawCircle(0, 0, centerRadius,  mCenterPaint);
           
@@ -179,15 +179,10 @@ public class ColorPickerDialog extends Dialog {
             rectShader = new LinearGradient(rectLeft, 0, rectRight, 0, mRectColors, null, Shader.TileMode.MIRROR);
             mRectPaint.setShader(rectShader);
             canvas.drawRect(rectLeft, rectTop, rectRight, rectBottom, mRectPaint);
-            float offset = mLinePaint.getStrokeWidth() / 2;
-            canvas.drawLine(rectLeft - offset, rectTop - offset * 2, 
-            		rectLeft - offset, rectBottom + offset * 2, mLinePaint);//左
-            canvas.drawLine(rectLeft - offset * 2, rectTop - offset, 
-            		rectRight + offset * 2, rectTop - offset, mLinePaint);//上
-            canvas.drawLine(rectRight + offset, rectTop - offset * 2, 
-            		rectRight + offset, rectBottom + offset * 2, mLinePaint);//右
-            canvas.drawLine(rectLeft - offset * 2, rectBottom + offset, 
-            		rectRight + offset * 2, rectBottom + offset, mLinePaint);//下
+            canvas.drawLine(rectLeft, rectTop, rectLeft, rectBottom, mLinePaint);//左
+            canvas.drawLine(rectLeft, rectTop,rectRight, rectTop, mLinePaint);//上
+            canvas.drawLine(rectRight, rectTop,rectRight, rectBottom, mLinePaint);//右
+            canvas.drawLine(rectLeft, rectBottom,rectRight , rectBottom, mLinePaint);//下
             mTextPaint.setColor(mCenterPaint.getColor()^0xffffff);
             canvas.drawText(mOk,textPoX,textPoY,mTextPaint);              
 			super.onDraw(canvas);
@@ -195,8 +190,8 @@ public class ColorPickerDialog extends Dialog {
 		
 		@Override
 		public boolean onTouchEvent(MotionEvent event) {
-			float x = event.getX() - mWidth / 2;
-            float y = event.getY() - mHeight / 2 + 50;
+			float x = event.getX() - 1.5f*unit;
+            float y = event.getY() - 1.5f*unit;
             boolean inCircle = inColorCircle(x, y, 
             		r + mPaint.getStrokeWidth() / 2, r - mPaint.getStrokeWidth() / 2);
             boolean inCenter = inCenter(x, y, centerRadius);
@@ -207,6 +202,8 @@ public class ColorPickerDialog extends Dialog {
                 	downInCircle = inCircle;
                 	downInRect = inRect;
                 	highlightCenter = inCenter;
+                	performClick();
+                	break;
                 case MotionEvent.ACTION_MOVE:
                 	if(downInCircle && inCircle) {//down按在渐变色环内, 且move也在渐变色环内
                 		float angle = (float) Math.atan2(y, x);
